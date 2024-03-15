@@ -48,6 +48,17 @@ const FloatingBar = () => {
         >
           <img src="color-circle.png" alt="color" height={50} width={50} />
         </span>
+        <span className="hover icon">
+          <img
+            src="cursor.png"
+            alt="cursor"
+            height={50}
+            width={50}
+            onClick={() => {
+              stateContext?.setState("cursor");
+            }}
+          />
+        </span>
         {showColorPicker && (
           <span className="position-absolute bottom-50 m-2 end-100 rounded-2 shadow ">
             <SketchPicker
@@ -165,9 +176,6 @@ const FloatingBar = () => {
             </span>
           </div>
         )}
-        <span className="hover icon ">
-          <img src="magic-wand.png" alt="color" height={50} width={50} />
-        </span>
         <span className="hover icon">
           <img
             src="undo.png"
@@ -192,18 +200,22 @@ const FloatingBar = () => {
             }}
           />
         </span>
-        <label htmlFor="add-image">
-          <input
-            type="file"
-            accept="image/*"
-            id="add-image"
-            className="d-none"
-            onChange={handleImageLoad}
-          />
-          <span className="hover icon">
+        <span className="hover icon ">
+          <img src="magic-wand.png" alt="color" height={50} width={50} />
+        </span>
+        <span className="hover icon">
+          <label htmlFor="add-image" style={{ cursor: "pointer" }}>
+            <input
+              type="file"
+              accept="image/*"
+              id="add-image"
+              className="d-none"
+              onChange={handleImageLoad}
+            />
+
             <img src="add-photo.png" alt="color" height={50} width={50} />
-          </span>
-        </label>
+          </label>
+        </span>
         <span className="hover icon">
           <img src="video-call.png" alt="color" height={50} width={50} />
         </span>

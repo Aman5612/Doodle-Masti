@@ -1,5 +1,13 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { Stage, Layer, Line, Image, Transformer, Text } from "react-konva";
+import {
+  Stage,
+  Layer,
+  Line,
+  Image,
+  Transformer,
+  Text,
+  Group,
+} from "react-konva";
 import Konva from "konva";
 import { StateContext } from "../../StateProvider";
 import html2canvas from "html2canvas";
@@ -33,6 +41,7 @@ const Body = () => {
   const imageRef = useRef(null);
   const transformerRef = useRef(null);
   const [imageOptions, setShowImageOptions] = useState(false);
+  const [deleteTextPosition, setDeleteTextPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (stateContext?.clean) {
@@ -80,6 +89,9 @@ const Body = () => {
   }, [lines, setRedoLines, redoLines, stateContext]);
 
   const handleMouseMove = (e: any) => {
+    if (tool === "cursor") {
+      return;
+    }
     if (!isDrawing.current) {
       return;
     }
@@ -98,6 +110,9 @@ const Body = () => {
   };
 
   const handleMouseDown = (e: any) => {
+    if (tool === "cursor") {
+      return;
+    }
     isDrawing.current = true;
     const pos = e.target.getStage().getPointerPosition();
     setLines([...lines, { tool, points: [pos.x, pos.y] }]);
@@ -210,12 +225,27 @@ const Body = () => {
     if (clickedId === "image") {
       transformerRef.current.nodes([e.target]);
     }
+    setShowImageOptions(true);
+    // Get the position of the selected image
+    const imageNode = e.target;
+    const imagePosition = {
+      x: imageNode.x(),
+      y: imageNode.y(),
+      width: imageNode.width() * imageNode.scaleX(),
+      height: imageNode.height() * imageNode.scaleY(),
+    };
+
+    // Position the delete text relative to the image
+    const deleteTextX = imagePosition.x + imagePosition.width - 100; // Adjust as needed
+    const deleteTextY = imagePosition.y + imagePosition.height - 100; // Adjust as needed
+    setDeleteTextPosition({ x: deleteTextX, y: deleteTextY });
   };
 
   const handleDragEnd = (e) => {
-    const newX = e.target.x();
-    const newY = e.target.y();
-    console.log("New image position:", { x: newX, y: newY });
+    setDeleteTextPosition({
+      x: e.target.x() + 60,
+      y: e.target.y() - 20,
+    });
   };
 
   const handleDelete = () => {
@@ -238,17 +268,16 @@ const Body = () => {
   const customPointer = {
     cursor:
       tool === "pen" || tool === "highlighter"
-        ? "url('https://img.icons8.com/ios-filled/50/000000/pen.png'), auto"
-        : "url('https://img.icons8.com/ios-filled/50/000000/eraser.png'), auto",
+        ? "crosshair"
+        : tool === "cursor"
+        ? "default"
+        : "grab",
     transition: "0.5s",
   };
 
   return (
-    <div
-      className="container-fluid position-fixed overflow-hidden"
-      style={customPointer}
-    >
-      {recording ? (
+    <div className=" position-fixed overflow-hidden" style={customPointer}>
+      {/* {recording ? (
         <button onClick={stopRecording}>Stop</button>
       ) : (
         <button onClick={startRecording}>Strt</button>
@@ -257,36 +286,53 @@ const Body = () => {
         <button onClick={handleDownload}>Download Recorded Video</button>
       ) : (
         <button disabled>Download Recorded Video</button>
-      )}
-
-      <button onClick={handleDelete}>Delete Image</button>
+      )} */}
       <Stage
-        width={window.innerWidth}
-        height={window.innerHeight}
+        width={window.visualViewport?.width}
+        height={window.visualViewport?.height}
         onMouseDown={handleMouseDown}
         onMousemove={handleMouseMove}
         onMouseup={handleMouseUp}
         ref={stageRef}
       >
         <Layer>
-          {imageData && (
-            <Image
-              id="image"
-              draggable={true}
-              image={imageData}
-              width={window.innerWidth}
-              height={window.innerHeight}
-              scaleX={imageData.width / (3 * window.innerWidth)}
-              scaleY={imageData.height / (3 * window.innerHeight)}
-              onClick={(event) => {
-                handleSelect(event);
-                setShowImageOptions(true);
-              }}
-              onTap={handleSelect}
-              onDragEnd={handleDragEnd}
-              ref={imageRef}
-            />
-          )}
+          <Group>
+            {imageData && (
+              <Image
+                id="image"
+                draggable={true}
+                image={imageData}
+                width={window.innerWidth}
+                height={window.innerHeight}
+                scaleX={imageData.width / (3 * window.innerWidth)}
+                scaleY={imageData.height / (3 * window.innerHeight)}
+                onClick={(event) => {
+                  handleSelect(event);
+                  setShowImageOptions(true);
+                }}
+                onTap={handleSelect}
+                onDragEnd={handleDragEnd}
+                ref={imageRef}
+              />
+            )}
+            {imageOptions && (
+              <Text
+                x={deleteTextPosition.x}
+                y={deleteTextPosition.y}
+                cornerRadius={5}
+                text="Delete Image"
+                fontSize={20}
+                onClick={handleDelete}
+                onTap={handleDelete}
+                draggable={true}
+                shadowColor="black"
+                shadowBlur={5}
+                shadowOffsetX={2}
+                shadowOffsetY={2}
+              />
+            )}
+          </Group>
+
           {lines.map((line, i) => (
             <Line
               key={i}

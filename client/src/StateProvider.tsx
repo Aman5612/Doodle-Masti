@@ -28,7 +28,7 @@ export const StateContext = createContext<StateContextProps | undefined>(
 );
 
 export const StateProvider = ({ children }: { children: React.ReactNode }) => {
-  const [state, setState] = useState("pen");
+  const [state, setState] = useState("cursor");
   const [undo, setUndo] = useState(false);
   const [redo, setRedo] = useState(false);
   const [penWidth, setPenWidth] = useState(5);

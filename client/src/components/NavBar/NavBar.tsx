@@ -6,14 +6,11 @@ import { LuLogOut } from "react-icons/lu";
 import { useState } from "react";
 import "./styles.css";
 
-const NavBar = ({ keycloak }: any) => {
+const NavBar = () => {
   const [smShow, setSmShow] = useState(false);
-  const userDetails = keycloak?.idTokenParsed;
-  console.log(userDetails);
+  // const userDetails = keycloak?.idTokenParsed;
 
-  const handleLogout = () => {
-    keycloak.logout();
-  };
+  const handleLogout = () => {};
   return (
     <>
       <nav className="navbar navbar-light bg-light d-flex  shadow ">
@@ -43,7 +40,7 @@ const NavBar = ({ keycloak }: any) => {
             </Button>
             {smShow && (
               <div className="width-20 height-20 d-flex flex-column  position-absolute top-100 end-40 translate-middle-x p-4 rounded-3 shadow  mt-2 align-content-center">
-                <h2 className="fs-3">Hello, {userDetails?.given_name}</h2>
+                <h2 className="fs-3">Hello, Aman</h2>
 
                 <p>Welcome to DoodleMasti!</p>
               </div>

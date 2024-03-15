@@ -5,7 +5,7 @@ import FloatingBar from "./components/FloatingBar/Floatingbar";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import LandingPage from "./components/LandingPage/LandingPage";
 
-const App = ({ keycloak }: { keycloak: any }) => {
+const App = () => {
   const router = createBrowserRouter([
     {
       path: "/",
@@ -21,7 +21,7 @@ const App = ({ keycloak }: { keycloak: any }) => {
       element: (
         <>
           <FloatingBar />
-          <NavBar keycloak={keycloak} />
+          <NavBar />
           <Body />
         </>
       ),
