@@ -50,6 +50,7 @@ const Body = () => {
   const isDrawing = useRef(false);
   const [lines, setLines] = useState<lines[]>([]);
   const [redoLines, setRedoLines] = useState<lines[]>([]);
+  const [strLine, setStrLine] = useState<lines[]>([]);
   const [redoShapes, setRedoShapes] = useState<ShapesProp[]>([]);
   const stateContext = useContext(StateContext);
   const [imageData, setImageData] = useState<HTMLImageElement | null>(null);
@@ -314,6 +315,7 @@ const Body = () => {
     rectangles,
     redoShapes,
     tool,
+    circles,
   ]);
 
   // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Handling Mouse Events>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -343,6 +345,17 @@ const Body = () => {
       setCircles(circles.concat());
       return;
     }
+    if (tool === "line") {
+      const stage = e.target.getStage();
+      const point = stage.getPointerPosition();
+      const initialPoint = strLine[strLine.length - 1].points.slice(0, 2);
+      const straightLine = {
+        tool: tool,
+        points: [...initialPoint, point.x, point.y],
+      };
+      setLines([...lines.slice(0, -1), straightLine]);
+      return;
+    }
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     const lastLine = lines[lines.length - 1];
@@ -362,6 +375,7 @@ const Body = () => {
     if (tool === "cursor") {
       return;
     }
+
     if (tool === "rectangle") {
       const id = `rect${rectangles.length + 1}`;
       const rect = {
@@ -388,6 +402,16 @@ const Body = () => {
       setCircles([...circles, cir]);
       return;
     }
+    if (tool === "line") {
+      const stage = e.target.getStage();
+      const pos = stage.getPointerPosition();
+      const startPoint = { x: pos.x, y: pos.y };
+      setStrLine([
+        ...lines,
+        { tool, ...startPoint, points: [startPoint.x, startPoint.y] },
+      ]);
+      return;
+    }
     isDrawing.current = true;
     const pos = e.target.getStage().getPointerPosition();
     setLines([...lines, { tool, points: [pos.x, pos.y] }]);
@@ -396,7 +420,12 @@ const Body = () => {
   const handleMouseUp = () => {
     isDrawing.current = false;
     socketRef.current.emit("drawing", lines);
-    console.log(">>>>>>>>>>>>>>>>>rectangles", rectangles);
+    const stage = e.target.getStage();
+    const pos = stage.getPointerPosition();
+    const endPoint = { x: pos.x, y: pos.y };
+    const lastLine = lines[lines.length - 1];
+    lastLine.points = [lastLine.x, lastLine.y, endPoint.x, endPoint.y];
+    setLines([...lines.slice(0, -1), lastLine]);
   };
   // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Getting Image Data>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   useEffect(() => {
@@ -634,7 +663,8 @@ const Body = () => {
       tool === "pen" ||
       tool === "highlighter" ||
       tool === "rectangle" ||
-      tool === "circle"
+      tool === "circle" ||
+      tool === "line"
         ? "crosshair"
         : tool === "cursor"
         ? "default"
@@ -701,6 +731,20 @@ const Body = () => {
               />
             );
           })}
+          {strLine.map((line, i) => (
+            <Line
+              key={i}
+              points={line.points}
+              stroke={line.strokeColor}
+              strokeWidth={line.strokeWidth}
+              opacity={line.opacity ? line.opacity : 1}
+              lineCap="round"
+              lineJoin="round"
+              globalCompositeOperation={
+                line.tool === "eraser" ? "destination-out" : "source-over"
+              }
+            />
+          ))}
           <Group>
             {imageData && (
               <Image

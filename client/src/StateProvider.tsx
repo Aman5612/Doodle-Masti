@@ -36,11 +36,14 @@ interface StateContextProps {
   setRectangles: (rectangles: ShapesProp[]) => void;
   circles: ShapesProp[];
   setCircles: (circles: ShapesProp[]) => void;
+  strLine: string;
+  setStrLine: (strLine: string) => void;
 }
 
 export const StateContext = createContext<StateContextProps | undefined>(
   undefined
 );
+
 
 export const StateProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState("cursor");
@@ -56,7 +59,7 @@ export const StateProvider = ({ children }: { children: React.ReactNode }) => {
   const [location, setLocation] = useState("/");
   const [rectangles, setRectangles] = useState<ShapesProp[]>([]);
   const [circles, setCircles] = useState<ShapesProp[]>([]);
-
+  const [strLine, setStrLine] = useState("line");
   return (
     <StateContext.Provider
       value={{
@@ -86,6 +89,8 @@ export const StateProvider = ({ children }: { children: React.ReactNode }) => {
         setRectangles,
         circles,
         setCircles,
+        strLine,
+        setStrLine,
       }}
     >
       {children}

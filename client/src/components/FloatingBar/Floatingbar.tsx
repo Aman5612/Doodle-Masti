@@ -252,7 +252,7 @@ const FloatingBar = () => {
                 height={28}
                 width={28}
                 onClick={() => {
-                  // stateContext?.setState("highlighter");
+                  stateContext?.setState("line");
                 }}
               />
             </span>
