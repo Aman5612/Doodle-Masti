@@ -1,13 +1,15 @@
-// import React from "react";
+import { useContext } from "react";
+import { StateContext } from "../../StateProvider";
 import "./styles.css";
 import { Link } from "react-router-dom";
 
 const LandingPage = () => {
+  const stateContext = useContext(StateContext);
+
+  stateContext?.setLocation("home");
+
   return (
-    <div
-      className="min-vh-100 bg-light "
-      style={{ backgroundColor: "gray-200" }}
-    >
+    <div className="min-vh-100 z-1" style={{ backgroundColor: "gray-300" }}>
       <div
         className="  d-flex flex-wrap justify-content-start gap-4 pt-4 "
         style={{ padding: "0px 100px" }}

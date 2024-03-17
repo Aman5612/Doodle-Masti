@@ -8,6 +8,7 @@ const FloatingBar = () => {
   const [showEraser, setShowEraser] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showPen, setShowPen] = useState(false);
+  const [showShapes, setShowShapes] = useState(false);
   const handleContentSave = () => {
     setShowContent(!showContent);
   };
@@ -37,7 +38,7 @@ const FloatingBar = () => {
   return (
     <>
       <div
-        className="d-flex gap-3 border-1 rounded-4 position-absolute bottom-0 start-50 translate-middle-x p-2  mb-3 bg-light position-relative shadow"
+        className="d-flex gap-3 border p-2 rounded-4 position-absolute bottom-0 start-50 translate-middle-x  mb-3 bg-light position-relative shadow"
         style={{ zIndex: "5" }}
       >
         <span
@@ -46,14 +47,14 @@ const FloatingBar = () => {
             setShowColorPicker(!showColorPicker);
           }}
         >
-          <img src="color-circle.png" alt="color" height={50} width={50} />
+          <img src="color-circle.png" alt="color" height={28} width={28} />
         </span>
         <span className="hover icon">
           <img
             src="cursor.png"
             alt="cursor"
-            height={50}
-            width={50}
+            height={28}
+            width={28}
             onClick={() => {
               stateContext?.setState("cursor");
             }}
@@ -76,10 +77,10 @@ const FloatingBar = () => {
             }
           }}
         >
-          <img src="color-pencils.png" alt="color" height={50} width={50} />
+          <img src="color-pencils.png" alt="color" height={28} width={28} />
         </span>
         {showPen && (
-          <div className="position-absolute bottom-100 start-0 bg-light p-2 m-2 rounded-2 shadow d-flex gap-2 move-pen">
+          <div className="position-absolute bottom-100 border start-0 bg-light p-2 m-2 rounded-2 shadow d-flex gap-3 move-pen">
             <input
               type="range"
               min="3"
@@ -93,8 +94,8 @@ const FloatingBar = () => {
               <img
                 src="pencil.png"
                 alt="pencil"
-                height={50}
-                width={50}
+                height={28}
+                width={28}
                 onClick={() => {
                   stateContext?.setState("pen");
                 }}
@@ -104,8 +105,8 @@ const FloatingBar = () => {
               <img
                 src="paint.png"
                 alt="paint"
-                height={50}
-                width={50}
+                height={28}
+                width={28}
                 onClick={() => {
                   // stateContext?.setClean(true);
                 }}
@@ -115,8 +116,8 @@ const FloatingBar = () => {
               <img
                 src="highlighter.png"
                 alt="highlighter"
-                height={50}
-                width={50}
+                height={28}
+                width={28}
                 onClick={() => {
                   stateContext?.setState("highlighter");
                 }}
@@ -126,8 +127,8 @@ const FloatingBar = () => {
               <img
                 src="clean.png"
                 alt="clean"
-                height={50}
-                width={50}
+                height={28}
+                width={28}
                 onClick={() => {
                   stateContext?.setClean(true);
                 }}
@@ -142,8 +143,8 @@ const FloatingBar = () => {
           <img
             src="eraser.png"
             alt="color"
-            height={50}
-            width={50}
+            height={28}
+            width={28}
             onClick={() => {
               stateContext?.setState("eraser");
               handleEraser();
@@ -151,7 +152,7 @@ const FloatingBar = () => {
           />
         </span>
         {showEraser && (
-          <div className="position-absolute bottom-100 start-10 move-eraser bg-light p-2 rounded-2 shadow d-flex gap-2 m-2">
+          <div className="position-absolute bottom-100 start-10 border move-eraser bg-light p-2 rounded-2 shadow d-flex gap-2 m-2">
             <input
               type="range"
               min="1"
@@ -166,8 +167,8 @@ const FloatingBar = () => {
               <img
                 src="clean.png"
                 alt="clean"
-                height={50}
-                width={50}
+                height={28}
+                width={28}
                 className="hover icon"
                 onClick={() => {
                   stateContext?.setClean(true);
@@ -178,13 +179,23 @@ const FloatingBar = () => {
         )}
         <span className="hover icon">
           <img
+            src="size.png"
+            alt="text"
+            height={28}
+            width={28}
+            onClick={() => {
+              // stateContext?.setState();
+            }}
+          />
+        </span>
+        <span className="hover icon">
+          <img
             src="undo.png"
             alt="color"
-            height={50}
-            width={50}
+            height={28}
+            width={28}
             onClick={() => {
               stateContext?.setUndo(true);
-              console.log("undo");
             }}
           />
         </span>
@@ -192,16 +203,85 @@ const FloatingBar = () => {
           <img
             src="redo.png"
             alt="color"
-            height={50}
-            width={50}
+            height={28}
+            width={28}
             onClick={() => {
               stateContext?.setRedo(true);
-              console.log("redo");
             }}
           />
         </span>
+        <span className="hover icon">
+          <img
+            src="shape.png"
+            alt="shapes"
+            height={28}
+            width={28}
+            onClick={() => {
+              setShowShapes(!showShapes);
+            }}
+          />
+        </span>
+        {showShapes && (
+          <div className="position-absolute bottom-100 start-50 bg-light p-2 m-2 rounded-2 border shadow d-flex gap-3 move-pen">
+            <span className="hover icon">
+              <img
+                src="rectangle.png"
+                alt="rectangle"
+                height={28}
+                width={28}
+                onClick={() => {
+                  stateContext?.setState("rectangle");
+                }}
+              />
+            </span>
+            <span className="hover icon">
+              <img
+                src="oval.png"
+                alt="circle"
+                height={28}
+                width={28}
+                onClick={() => {
+                  stateContext?.setState("circle");
+                }}
+              />
+            </span>
+            <span className="hover icon">
+              <img
+                src="diagonal-line.png"
+                alt="line"
+                height={28}
+                width={28}
+                onClick={() => {
+                  // stateContext?.setState("highlighter");
+                }}
+              />
+            </span>
+            <span className="hover icon">
+              <img
+                src="nodes.png"
+                alt="join_nodes"
+                height={28}
+                width={28}
+                onClick={() => {
+                  // stateContext?.setClean(true);
+                }}
+              />
+            </span>
+            <span className="hover icon">
+              <img
+                src="next.png"
+                alt="arrow_line"
+                height={28}
+                width={28}
+                onClick={() => {
+                  // stateContext?.setClean(true);
+                }}
+              />
+            </span>
+          </div>
+        )}
         <span className="hover icon ">
-          <img src="magic-wand.png" alt="color" height={50} width={50} />
+          <img src="magic-wand.png" alt="color" height={28} width={28} />
         </span>
         <span className="hover icon">
           <label htmlFor="add-image" style={{ cursor: "pointer" }}>
@@ -213,14 +293,14 @@ const FloatingBar = () => {
               onChange={handleImageLoad}
             />
 
-            <img src="add-photo.png" alt="color" height={50} width={50} />
+            <img src="add-photo.png" alt="color" height={28} width={28} />
           </label>
         </span>
         <span className="hover icon">
-          <img src="video-call.png" alt="color" height={50} width={50} />
+          <img src="video-call.png" alt="color" height={28} width={28} />
         </span>
         <div className="hover icon" onClick={handleContentSave}>
-          <img src="application.png" alt="color" height={50} width={50} />
+          <img src="application.png" alt="color" height={28} width={28} />
         </div>
         {showContent && (
           <div className="d-inline-flex gap-3 border-1 rounded-4 p-3 mb-3 bg-light flex-column position-absolute bottom-100 end-0 shadow">
@@ -233,8 +313,8 @@ const FloatingBar = () => {
               <img
                 src="image-download.png"
                 alt="color"
-                height={50}
-                width={50}
+                height={28}
+                width={28}
               />
             </span>
             <span
@@ -243,7 +323,7 @@ const FloatingBar = () => {
                 stateContext?.setDownloadAsPDF(true);
               }}
             >
-              <img src="pdf.png" alt="color" height={50} width={50} />
+              <img src="pdf.png" alt="color" height={28} width={28} />
             </span>
           </div>
         )}

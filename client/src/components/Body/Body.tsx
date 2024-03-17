@@ -1,4 +1,10 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import {
+  ReactEventHandler,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Stage,
   Layer,
@@ -7,13 +13,19 @@ import {
   Transformer,
   Text,
   Group,
+  Rect,
+  Circle,
 } from "react-konva";
 import Konva from "konva";
 import { StateContext } from "../../StateProvider";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import RecordRTC from "recordrtc";
-import { set } from "mongoose";
+import socketIOClient from "socket.io-client";
+import {
+  initialRectangles,
+  InitialCircles,
+} from "../../constant/InitialShapes";
 
 interface lines {
   tool: string | undefined;
@@ -25,11 +37,20 @@ interface lines {
   opacity?: number | undefined;
   strokeColor?: string;
 }
+interface ShapesProp {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  stroke: string;
+  id: string;
+}
 
 const Body = () => {
   const isDrawing = useRef(false);
   const [lines, setLines] = useState<lines[]>([]);
   const [redoLines, setRedoLines] = useState<lines[]>([]);
+  const [redoShapes, setRedoShapes] = useState<ShapesProp[]>([]);
   const stateContext = useContext(StateContext);
   const [imageData, setImageData] = useState<HTMLImageElement | null>(null);
   const tool = stateContext?.state;
@@ -42,12 +63,157 @@ const Body = () => {
   const transformerRef = useRef(null);
   const [imageOptions, setShowImageOptions] = useState(false);
   const [deleteTextPosition, setDeleteTextPosition] = useState({ x: 0, y: 0 });
+  const [rectangles, setRectangles] = useState<ShapesProp[]>([]);
+  const [circles, setCircles] = useState<ShapesProp[]>([]);
+  // const [ellipse, setEllipse] = useState([]);
+  const [selectedId, selectShape] = useState(null);
+  const [imageSize, setImageSize] = useState({
+    width: 0,
+    height: 0,
+    scaleX: 1,
+    scaleY: 1,
+  });
+  useEffect(() => {
+    stateContext?.setLocation("board");
+  }, [stateContext]);
 
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Handle Shapes>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  const checkDeselect = (e) => {
+    const clickedOnEmpty = e.target === e.target.getStage();
+    if (clickedOnEmpty) {
+      selectShape(null);
+    }
+  };
+
+  const Rectangle = ({ shapeProps, isSelected, onSelect, onChange }: any) => {
+    const shapeRef = useRef();
+    const trRef = useRef();
+
+    useEffect(() => {
+      if (isSelected) {
+        trRef.current.nodes([shapeRef.current]);
+        trRef.current.getLayer().batchDraw();
+      }
+    }, [isSelected]);
+
+    return (
+      <>
+        <Rect
+          onClick={onSelect}
+          onTap={onSelect}
+          ref={shapeRef}
+          {...shapeProps}
+          draggable
+          onDragEnd={(e) => {
+            onChange({
+              ...shapeProps,
+              x: e.target.x(),
+              y: e.target.y(),
+            });
+          }}
+          onTransformEnd={(e) => {
+            const node = shapeRef.current;
+            const scaleX = node.scaleX();
+            const scaleY = node.scaleY();
+            node.scaleX(1);
+            node.scaleY(1);
+            onChange({
+              ...shapeProps,
+              x: node.x(),
+              y: node.y(),
+              width: Math.max(5, node.width() * scaleX),
+              height: Math.max(node.height() * scaleY),
+            });
+          }}
+        />
+        {isSelected && (
+          <Transformer
+            ref={trRef}
+            flipEnabled={false}
+            boundBoxFunc={(oldBox, newBox) => {
+              if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) {
+                return oldBox;
+              }
+              return newBox;
+            }}
+          />
+        )}
+      </>
+    );
+  };
+  const CircleComponent = ({
+    shapeProps,
+    isSelected,
+    onSelect,
+    onChange,
+  }: any) => {
+    const shapeRef = useRef();
+    const trRef = useRef();
+
+    useEffect(() => {
+      if (isSelected) {
+        trRef.current.nodes([shapeRef.current]);
+        trRef.current.getLayer().batchDraw();
+      }
+    }, [isSelected]);
+
+    return (
+      <>
+        <Circle
+          onClick={onSelect}
+          onTap={onSelect}
+          ref={shapeRef}
+          {...shapeProps}
+          draggable
+          onDragEnd={(e) => {
+            onChange({
+              ...shapeProps,
+              x: e.target.x(),
+              y: e.target.y(),
+            });
+          }}
+          onTransformEnd={(e) => {
+            const node = shapeRef.current;
+            const scaleX = node.scaleX();
+            const scaleY = node.scaleY();
+            node.scaleX(1);
+            node.scaleY(1);
+            onChange({
+              ...shapeProps,
+              x: node.x(),
+              y: node.y(),
+              width: Math.max(5, node.width() * scaleX),
+              height: Math.max(node.height() * scaleY),
+            });
+          }}
+        />
+        {isSelected && (
+          <Transformer
+            ref={trRef}
+            flipEnabled={false}
+            boundBoxFunc={(oldBox, newBox) => {
+              if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) {
+                return oldBox;
+              }
+              return newBox;
+            }}
+          />
+        )}
+      </>
+    );
+  };
+
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Clean Board>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   useEffect(() => {
     if (stateContext?.clean) {
       setLines([]);
       setRedoLines([]);
       stateContext?.setClean(false);
+      socketRef.current.emit("clean");
+      setCircles([]);
+      setRectangles([]);
+      setRedoShapes([]);
+      setImageData(null);
     }
   }, [
     setLines,
@@ -56,8 +222,27 @@ const Body = () => {
     stateContext?.setClean,
     stateContext,
   ]);
-
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Undo and Redo>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   useEffect(() => {
+    if (stateContext?.undo && tool === "rectangle") {
+      if (redoShapes.length === 0) {
+        return;
+      }
+      const lastRect = rectangles[rectangles.length - 1];
+      setRectangles(rectangles.slice(0, rectangles.length - 1));
+      setRedoShapes((redoShapes) => [...redoShapes, lastRect]);
+      stateContext?.setUndo(false);
+    }
+    if (stateContext?.undo && tool === "circle") {
+      if (redoShapes.length === 0) {
+        return;
+      }
+      const lastRect = circles[circles.length - 1];
+      setCircles(circles.slice(0, circles.length - 1));
+      setRedoShapes((redoShapes) => [...redoShapes, lastRect]);
+      stateContext?.setUndo(false);
+    }
+
     if (stateContext?.undo) {
       const handleUndo = () => {
         if (lines.length === 0) {
@@ -66,14 +251,47 @@ const Body = () => {
         const lastLine = lines[lines.length - 1];
         setLines(lines.slice(0, lines.length - 1));
         setRedoLines((redoLines) => [...redoLines, lastLine]);
+        socketRef.current.emit(
+          "undo",
+          lastLine,
+          lines.slice(0, lines.length - 1)
+        );
+        //Implemtent undo for shapes usign socket as well
       };
+
       handleUndo();
       stateContext?.setUndo(false);
-      console.log(stateContext?.undo, "undo");
     }
-  }, [lines, setLines, setRedoLines, stateContext]);
+  }, [
+    lines,
+    setLines,
+    setRedoLines,
+    stateContext,
+    rectangles,
+    redoShapes,
+    tool,
+    circles,
+  ]);
 
   useEffect(() => {
+    if (stateContext?.redo && tool === "rectangle") {
+      if (redoShapes.length === 0) {
+        return;
+      }
+      const lastRect = redoShapes[redoShapes.length - 1];
+      setRedoShapes((redoShapes) => redoShapes.slice(0, -1));
+      setRectangles((rectangles) => [...rectangles, lastRect]);
+      stateContext?.setRedo(false);
+    }
+    if (stateContext?.redo && tool === "circle") {
+      if (redoShapes.length === 0) {
+        return;
+      }
+      const lastRect = circles[circles.length - 1];
+      setRedoShapes((redoShapes) => redoShapes.slice(0, -1));
+      setRectangles((rectangles) => [...rectangles, lastRect]);
+      stateContext?.setRedo(false);
+    }
     if (stateContext?.redo) {
       const handleRedo = () => {
         if (redoLines.length === 0) {
@@ -82,17 +300,47 @@ const Body = () => {
         const lastRedoLine = redoLines[redoLines.length - 1];
         setRedoLines((redoLines) => redoLines.slice(0, -1));
         setLines((lines) => [...lines, lastRedoLine]);
+        socketRef.current.emit("redo", lastRedoLine, redoLines);
+        // Implement redo for shapes using socket as well using sockets as well
       };
       handleRedo();
       stateContext?.setRedo(false);
     }
-  }, [lines, setRedoLines, redoLines, stateContext]);
+  }, [
+    lines,
+    setRedoLines,
+    redoLines,
+    stateContext,
+    rectangles,
+    redoShapes,
+    tool,
+  ]);
+
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Handling Mouse Events>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
   const handleMouseMove = (e: any) => {
     if (tool === "cursor") {
       return;
     }
     if (!isDrawing.current) {
+      return;
+    }
+    if (tool === "rectangle") {
+      const pos = e.target.getStage().getPointerPosition();
+      const lastRect = rectangles[rectangles.length - 1];
+      lastRect.width = pos.x - lastRect.x;
+      lastRect.height = pos.y - lastRect.y;
+      rectangles.splice(rectangles.length - 1, 1, lastRect);
+      setRectangles(rectangles.concat());
+      return;
+    }
+    if (tool === "circle") {
+      const pos = e.target.getStage().getPointerPosition();
+      const lastCir = circles[circles.length - 1];
+      lastCir.width = pos.x - lastCir.x;
+      lastCir.height = pos.y - lastCir.y;
+      circles.splice(circles.length - 1, 1, lastCir);
+      setCircles(circles.concat());
       return;
     }
     const stage = e.target.getStage();
@@ -110,7 +358,34 @@ const Body = () => {
   };
 
   const handleMouseDown = (e: any) => {
+    isDrawing.current = true;
     if (tool === "cursor") {
+      return;
+    }
+    if (tool === "rectangle") {
+      const id = `rect${rectangles.length + 1}`;
+      const rect = {
+        x: e.target.getStage().getPointerPosition().x,
+        y: e.target.getStage().getPointerPosition().y,
+        width: 5,
+        height: 5,
+        stroke: "black",
+        id,
+      };
+      setRectangles([...rectangles, rect]);
+      return;
+    }
+    if (tool === "circle") {
+      const id = `circle${rectangles.length + 1}`;
+      const cir = {
+        x: e.target.getStage().getPointerPosition().x,
+        y: e.target.getStage().getPointerPosition().y,
+        width: 5,
+        height: 5,
+        stroke: "black",
+        id,
+      };
+      setCircles([...circles, cir]);
       return;
     }
     isDrawing.current = true;
@@ -120,22 +395,24 @@ const Body = () => {
 
   const handleMouseUp = () => {
     isDrawing.current = false;
+    socketRef.current.emit("drawing", lines);
+    console.log(">>>>>>>>>>>>>>>>>rectangles", rectangles);
   };
-
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Getting Image Data>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   useEffect(() => {
     if (stateContext?.imageData) {
       const img = new window.Image();
       img.src = stateContext.imageData;
       img.onload = () => {
-        console.log("Image loaded successfully");
         setImageData(img);
+        socketRef.current.emit("image", img.src);
       };
       img.onerror = (error) => {
         console.error("Error loading image:", error);
       };
     }
   }, [stateContext?.imageData]);
-
+  //  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Download Board Content>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   useEffect(() => {
     if (stateContext?.download) {
       downloadScreenContent();
@@ -156,7 +433,7 @@ const Body = () => {
     document.body.removeChild(link);
   };
 
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Download Board Content as PDF>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Download Board Content as PDF>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   const downloadAsPDF = () => {
     const stage = stageRef.current.getStage();
     html2canvas(stage.container(), { scale: 2 }).then((canvas) => {
@@ -171,7 +448,7 @@ const Body = () => {
     });
   };
 
-  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Screen Recording>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Screen Recording>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
   const startRecording = () => {
     if (stageRef.current) {
@@ -218,30 +495,42 @@ const Body = () => {
     }
   };
 
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Image Drag and Drop>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Image Drag and Drop>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+  const handleImageSizeChange = () => {
+    const imageNode = transformerRef.current.nodes()[0];
+
+    const width = imageNode.width() * imageNode.scaleX();
+    const height = imageNode.height() * imageNode.scaleY();
+    const scaleX = imageNode.scaleX();
+    const scaleY = imageNode.scaleY();
+
+    setImageSize({ width, height, scaleX, scaleY });
+    socketRef.current.emit("transform", { width, height, scaleX, scaleY });
+  };
 
   const handleSelect = (e) => {
     const clickedId = e.target.attrs.id;
     if (clickedId === "image") {
       transformerRef.current.nodes([e.target]);
+      transformerRef.current.on("transform", handleImageSizeChange);
     }
-    setShowImageOptions(true);
-    // Get the position of the selected image
-    const imageNode = e.target;
-    const imagePosition = {
-      x: imageNode.x(),
-      y: imageNode.y(),
-      width: imageNode.width() * imageNode.scaleX(),
-      height: imageNode.height() * imageNode.scaleY(),
-    };
+    // setShowImageOptions(true);
+    // const imageNode = e.target;
+    // const imagePosition = {
+    //   x: imageNode.x(),
+    //   y: imageNode.y(),
+    //   width: imageNode.width() * imageNode.scaleX(),
+    //   height: imageNode.height() * imageNode.scaleY(),
+    // };
 
-    // Position the delete text relative to the image
-    const deleteTextX = imagePosition.x + imagePosition.width - 100; // Adjust as needed
-    const deleteTextY = imagePosition.y + imagePosition.height - 100; // Adjust as needed
-    setDeleteTextPosition({ x: deleteTextX, y: deleteTextY });
+    // const deleteTextX = imagePosition.x + imagePosition.width - 100;
+    // const deleteTextY = imagePosition.y + imagePosition.height - 100;
+    // setDeleteTextPosition({ x: deleteTextX, y: deleteTextY });
   };
 
   const handleDragEnd = (e) => {
+    socketRef.current.emit("drag", e.target.x(), e.target.y());
     setDeleteTextPosition({
       x: e.target.x() + 60,
       y: e.target.y() - 20,
@@ -263,11 +552,89 @@ const Body = () => {
     }
     setShowImageOptions(false);
   };
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Setup Socket>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  const socketRef = useRef<SocketIOClient.Socket | null>(null);
 
-  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Custom Pointer>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  useEffect(() => {
+    socketRef.current = socketIOClient("http://localhost:3000");
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    socketRef.current.on("drawing", (data: lines[]) => {
+      setLines([...lines, data[data.length - 1]]);
+    });
+
+    socketRef.current.on("redo", (lastRedoLine: lines) => {
+      setRedoLines((redoLines) => redoLines.slice(0, -1));
+      setLines((lines) => [...lines, lastRedoLine]);
+    });
+
+    socketRef.current.on("undo", (lastLine: lines, lines: lines[]) => {
+      setLines(lines);
+      setRedoLines((redoLines) => [...redoLines, lastLine]);
+    });
+    socketRef.current.on("image", (imageData: string | null) => {
+      if (imageData) {
+        const img = new window.Image();
+        img.src = imageData ?? "";
+        img.onload = () => {
+          setImageData(img);
+          setShowImageOptions(true);
+        };
+        img.onerror = (error) => {
+          console.error("Error loading image:", error);
+        };
+      }
+    });
+    socketRef.current.on("drag", (x: number, y: number) => {
+      const imageRefCurrent = imageRef.current;
+      if (imageRefCurrent) {
+        const imageRefCurrentTyped = imageRefCurrent as Konva.Image;
+        imageRefCurrentTyped.x(x);
+        imageRefCurrentTyped.y(y);
+      }
+    });
+
+    socketRef.current.on("clean", () => {
+      setLines([]);
+      setRedoLines([]);
+    });
+    socketRef.current.on(
+      "transform",
+      ({ width, height, scaleX, scaleY }: any) => {
+        setImageSize({ width, height, scaleX, scaleY });
+      }
+    );
+
+    return () => {
+      socketRef.current.off("drawing");
+      socketRef.current.off("redo");
+      socketRef.current.off("undo");
+      socketRef.current.off("image");
+      socketRef.current.off("drag");
+      socketRef.current.off("clean");
+      socketRef.current.off("transform");
+    };
+  }, [lines, setLines, redoLines]);
+
+  useEffect(() => {
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, []);
+
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Custom Pointer>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   const customPointer = {
     cursor:
-      tool === "pen" || tool === "highlighter"
+      tool === "pen" ||
+      tool === "highlighter" ||
+      tool === "rectangle" ||
+      tool === "circle"
         ? "crosshair"
         : tool === "cursor"
         ? "default"
@@ -290,12 +657,50 @@ const Body = () => {
       <Stage
         width={window.visualViewport?.width}
         height={window.visualViewport?.height}
-        onMouseDown={handleMouseDown}
-        onMousemove={handleMouseMove}
+        onMouseDown={(e) => {
+          handleMouseDown(e);
+          checkDeselect(e);
+        }}
+        onMouseMove={handleMouseMove}
         onMouseup={handleMouseUp}
+        onTouchStart={checkDeselect}
         ref={stageRef}
       >
         <Layer>
+          {rectangles.map((rect, i) => {
+            return (
+              <Rectangle
+                key={i}
+                shapeProps={rect}
+                isSelected={rect.id === selectedId}
+                onSelect={() => {
+                  selectShape(rect.id);
+                }}
+                onChange={(newAttrs) => {
+                  const rects = rectangles.slice();
+                  rects[i] = newAttrs;
+                  setRectangles(rects);
+                }}
+              />
+            );
+          })}
+          {circles.map((rect, i) => {
+            return (
+              <CircleComponent
+                key={i}
+                shapeProps={rect}
+                isSelected={rect.id === selectedId}
+                onSelect={() => {
+                  selectShape(rect.id);
+                }}
+                onChange={(newAttrs) => {
+                  const rects = circles.slice();
+                  rects[i] = newAttrs;
+                  setCircles(rects);
+                }}
+              />
+            );
+          })}
           <Group>
             {imageData && (
               <Image
@@ -304,8 +709,16 @@ const Body = () => {
                 image={imageData}
                 width={window.innerWidth}
                 height={window.innerHeight}
-                scaleX={imageData.width / (3 * window.innerWidth)}
-                scaleY={imageData.height / (3 * window.innerHeight)}
+                scaleX={
+                  imageSize
+                    ? imageSize.scaleX
+                    : imageData.width / (3 * window.innerWidth)
+                }
+                scaleY={
+                  imageSize
+                    ? imageSize.scaleY
+                    : imageData.height / (3 * window.innerHeight)
+                }
                 onClick={(event) => {
                   handleSelect(event);
                   setShowImageOptions(true);

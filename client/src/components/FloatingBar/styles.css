@@ -1,15 +1,18 @@
 .hover:hover {
-  /* background-color: #d1f5f9; */
   transition: 0.1s;
 }
 .icon {
-  padding: 0.4rem;
+  /* padding: 0.4rem; */
 }
+
+.clicked{
+  border-radius: 20%;
+  box-shadow: 2px 2px 5px 0px #948d8d;
+}
+
 .icon :hover {
   border-radius: 20%;
-
-  transition: transform 0.3s ease-in-out;
-  transform: scale(1);
+  box-shadow: 2px 2px 5px 0px #948d8d;
 }
 
 .move-eraser {

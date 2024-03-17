@@ -1,5 +1,14 @@
 import React, { createContext, useState } from "react";
 
+interface ShapesProp {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  stroke: string;
+  id: string;
+}
+
 interface StateContextProps {
   state: string;
   setState: (state: string) => void;
@@ -21,6 +30,12 @@ interface StateContextProps {
   setDownload: (download: boolean) => void;
   downloadAsPDF: boolean;
   setDownloadAsPDF: (downloadAsPDF: boolean) => void;
+  location: string;
+  setLocation: (location: string) => void;
+  rectangles: ShapesProp[];
+  setRectangles: (rectangles: ShapesProp[]) => void;
+  circles: ShapesProp[];
+  setCircles: (circles: ShapesProp[]) => void;
 }
 
 export const StateContext = createContext<StateContextProps | undefined>(
@@ -38,6 +53,9 @@ export const StateProvider = ({ children }: { children: React.ReactNode }) => {
   const [imageData, setImageData] = useState<string | null>(null);
   const [download, setDownload] = useState(false);
   const [downloadAsPDF, setDownloadAsPDF] = useState(false);
+  const [location, setLocation] = useState("/");
+  const [rectangles, setRectangles] = useState<ShapesProp[]>([]);
+  const [circles, setCircles] = useState<ShapesProp[]>([]);
 
   return (
     <StateContext.Provider
@@ -62,6 +80,12 @@ export const StateProvider = ({ children }: { children: React.ReactNode }) => {
         setDownload,
         downloadAsPDF,
         setDownloadAsPDF,
+        location,
+        setLocation,
+        rectangles,
+        setRectangles,
+        circles,
+        setCircles,
       }}
     >
       {children}
