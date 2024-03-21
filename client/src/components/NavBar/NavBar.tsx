@@ -6,9 +6,11 @@ import { LuLogOut } from "react-icons/lu";
 import { useContext, useState } from "react";
 import "./styles.css";
 import { StateContext } from "../../StateProvider";
+import ShareLink from "../ShareLink";
 
 const NavBar = ({ keycloak }: any) => {
   const [smShow, setSmShow] = useState(false);
+  const [isShare, setIsShare] = useState(false);
   const [joinModal, setJoinModal] = useState(false);
   const userDetails = keycloak?.idTokenParsed;
 
@@ -22,7 +24,9 @@ const NavBar = ({ keycloak }: any) => {
   const handleProfile = () => {
     setSmShow(!smShow);
   };
-  const handleShare = () => {};
+  const handleShare = () => {
+    setIsShare(!isShare);
+  };
   return (
     <>
       <nav className="navbar navbar-light bg-secondary d-flex p-1 ">
@@ -34,7 +38,7 @@ const NavBar = ({ keycloak }: any) => {
             {stateContext?.location === "board" && (
               <Link to="/">
                 <img
-                  src="home.png"
+                  src="/home.png"
                   alt="home-icon"
                   width={23}
                   height={23}
@@ -51,7 +55,7 @@ const NavBar = ({ keycloak }: any) => {
               className="border-0 bg-secondary position-relative"
             >
               <img
-                src="profile.jpg"
+                src="/profile.jpg"
                 alt="profile"
                 height={30}
                 width={30}
@@ -89,7 +93,7 @@ const NavBar = ({ keycloak }: any) => {
                 <Button
                   className="btn btn-sm btn-secondary btn-outline-black  text-dark border-0 "
                   onClick={(e) => {
-                    handleShare(e);
+                    handleShare();
                   }}
                   style={{
                     height: "2rem",
@@ -101,6 +105,7 @@ const NavBar = ({ keycloak }: any) => {
                   <FaRegShareFromSquare className="m-1 fs-5" />
                 </Button>
               )}
+              {isShare && <ShareLink />}
 
               {joinModal && (
                 <div

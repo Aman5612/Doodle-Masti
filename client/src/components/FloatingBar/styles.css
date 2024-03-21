@@ -1,9 +1,7 @@
 .hover:hover {
   transition: 0.1s;
 }
-.icon {
-  /* padding: 0.4rem; */
-}
+
 
 .clicked{
   border-radius: 20%;

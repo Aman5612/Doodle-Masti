@@ -47,11 +47,11 @@ const FloatingBar = () => {
             setShowColorPicker(!showColorPicker);
           }}
         >
-          <img src="color-circle.png" alt="color" height={28} width={28} />
+          <img src="/color-circle.png" alt="color" height={28} width={28} />
         </span>
         <span className="hover icon">
           <img
-            src="cursor.png"
+            src="/cursor.png"
             alt="cursor"
             height={28}
             width={28}
@@ -77,7 +77,7 @@ const FloatingBar = () => {
             }
           }}
         >
-          <img src="color-pencils.png" alt="color" height={28} width={28} />
+          <img src="/color-pencils.png" alt="color" height={28} width={28} />
         </span>
         {showPen && (
           <div className="position-absolute bottom-100 border start-0 bg-light p-2 m-2 rounded-2 shadow d-flex gap-3 move-pen">
@@ -92,7 +92,7 @@ const FloatingBar = () => {
             />
             <span className="hover icon">
               <img
-                src="pencil.png"
+                src="/pencil.png"
                 alt="pencil"
                 height={28}
                 width={28}
@@ -103,7 +103,7 @@ const FloatingBar = () => {
             </span>
             <span className="hover icon">
               <img
-                src="paint.png"
+                src="/paint.png"
                 alt="paint"
                 height={28}
                 width={28}
@@ -114,7 +114,7 @@ const FloatingBar = () => {
             </span>
             <span className="hover icon">
               <img
-                src="highlighter.png"
+                src="/highlighter.png"
                 alt="highlighter"
                 height={28}
                 width={28}
@@ -125,7 +125,7 @@ const FloatingBar = () => {
             </span>
             <span className="hover icon">
               <img
-                src="clean.png"
+                src="/clean.png"
                 alt="clean"
                 height={28}
                 width={28}
@@ -141,7 +141,7 @@ const FloatingBar = () => {
           onClick={() => stateContext?.setState("eraser")}
         >
           <img
-            src="eraser.png"
+            src="/eraser.png"
             alt="color"
             height={28}
             width={28}
@@ -165,7 +165,7 @@ const FloatingBar = () => {
             />
             <span className="hover icon ">
               <img
-                src="clean.png"
+                src="/clean.png"
                 alt="clean"
                 height={28}
                 width={28}
@@ -179,7 +179,7 @@ const FloatingBar = () => {
         )}
         <span className="hover icon">
           <img
-            src="size.png"
+            src="/size.png"
             alt="text"
             height={28}
             width={28}
@@ -190,7 +190,7 @@ const FloatingBar = () => {
         </span>
         <span className="hover icon">
           <img
-            src="undo.png"
+            src="/undo.png"
             alt="color"
             height={28}
             width={28}
@@ -201,7 +201,7 @@ const FloatingBar = () => {
         </span>
         <span className="hover icon">
           <img
-            src="redo.png"
+            src="/redo.png"
             alt="color"
             height={28}
             width={28}
@@ -212,7 +212,7 @@ const FloatingBar = () => {
         </span>
         <span className="hover icon">
           <img
-            src="shape.png"
+            src="/shape.png"
             alt="shapes"
             height={28}
             width={28}
@@ -225,7 +225,7 @@ const FloatingBar = () => {
           <div className="position-absolute bottom-100 start-50 bg-light p-2 m-2 rounded-2 border shadow d-flex gap-3 move-pen">
             <span className="hover icon">
               <img
-                src="rectangle.png"
+                src="/rectangle.png"
                 alt="rectangle"
                 height={28}
                 width={28}
@@ -236,7 +236,7 @@ const FloatingBar = () => {
             </span>
             <span className="hover icon">
               <img
-                src="oval.png"
+                src="/oval.png"
                 alt="circle"
                 height={28}
                 width={28}
@@ -247,7 +247,7 @@ const FloatingBar = () => {
             </span>
             <span className="hover icon">
               <img
-                src="diagonal-line.png"
+                src="/diagonal-line.png"
                 alt="line"
                 height={28}
                 width={28}
@@ -258,7 +258,7 @@ const FloatingBar = () => {
             </span>
             <span className="hover icon">
               <img
-                src="nodes.png"
+                src="/nodes.png"
                 alt="join_nodes"
                 height={28}
                 width={28}
@@ -269,7 +269,7 @@ const FloatingBar = () => {
             </span>
             <span className="hover icon">
               <img
-                src="next.png"
+                src="/next.png"
                 alt="arrow_line"
                 height={28}
                 width={28}
@@ -281,7 +281,7 @@ const FloatingBar = () => {
           </div>
         )}
         <span className="hover icon ">
-          <img src="magic-wand.png" alt="color" height={28} width={28} />
+          <img src="/magic-wand.png" alt="color" height={28} width={28} />
         </span>
         <span className="hover icon">
           <label htmlFor="add-image" style={{ cursor: "pointer" }}>
@@ -293,14 +293,14 @@ const FloatingBar = () => {
               onChange={handleImageLoad}
             />
 
-            <img src="add-photo.png" alt="color" height={28} width={28} />
+            <img src="/add-photo.png" alt="color" height={28} width={28} />
           </label>
         </span>
         <span className="hover icon">
-          <img src="video-call.png" alt="color" height={28} width={28} />
+          <img src="/video-call.png" alt="color" height={28} width={28} />
         </span>
         <div className="hover icon" onClick={handleContentSave}>
-          <img src="application.png" alt="color" height={28} width={28} />
+          <img src="/application.png" alt="color" height={28} width={28} />
         </div>
         {showContent && (
           <div className="d-inline-flex gap-3 border-1 rounded-4 p-3 mb-3 bg-light flex-column position-absolute bottom-100 end-0 shadow">
@@ -311,7 +311,7 @@ const FloatingBar = () => {
               }}
             >
               <img
-                src="image-download.png"
+                src="/image-download.png"
                 alt="color"
                 height={28}
                 width={28}
@@ -323,7 +323,7 @@ const FloatingBar = () => {
                 stateContext?.setDownloadAsPDF(true);
               }}
             >
-              <img src="pdf.png" alt="color" height={28} width={28} />
+              <img src="/pdf.png" alt="color" height={28} width={28} />
             </span>
           </div>
         )}

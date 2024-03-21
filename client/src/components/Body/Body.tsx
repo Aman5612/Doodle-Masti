@@ -47,6 +47,7 @@ interface ShapesProp {
 }
 
 const Body = () => {
+  // lines,strLine.imageData.rectangles,circles,redoLines,redoShapes
   const isDrawing = useRef(false);
   const [lines, setLines] = useState<lines[]>([]);
   const [redoLines, setRedoLines] = useState<lines[]>([]);
@@ -417,15 +418,17 @@ const Body = () => {
     setLines([...lines, { tool, points: [pos.x, pos.y] }]);
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e) => {
     isDrawing.current = false;
     socketRef.current.emit("drawing", lines);
-    const stage = e.target.getStage();
-    const pos = stage.getPointerPosition();
-    const endPoint = { x: pos.x, y: pos.y };
-    const lastLine = lines[lines.length - 1];
-    lastLine.points = [lastLine.x, lastLine.y, endPoint.x, endPoint.y];
-    setLines([...lines.slice(0, -1), lastLine]);
+    if (tool === "line") {
+      const stage = e.target.getStage();
+      const pos = stage.getPointerPosition();
+      const endPoint = { x: pos.x, y: pos.y };
+      const lastLine = strLine[strLine.length - 1];
+      lastLine.points = [lastLine.x, lastLine.y, endPoint.x, endPoint.y];
+      setStrLine([...strLine.slice(0, -1), lastLine]);
+    }
   };
   // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Getting Image Data>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   useEffect(() => {

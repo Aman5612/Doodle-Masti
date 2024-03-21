@@ -17,7 +17,7 @@ const App = ({ keycloak }: { keycloak: any }) => {
       ),
     },
     {
-      path: "/landing-page",
+      path: "/landing-page/:token",
       element: (
         <>
           <FloatingBar />

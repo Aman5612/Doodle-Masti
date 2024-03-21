@@ -44,7 +44,6 @@ export const StateContext = createContext<StateContextProps | undefined>(
   undefined
 );
 
-
 export const StateProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState("cursor");
   const [undo, setUndo] = useState(false);
